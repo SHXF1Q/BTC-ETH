@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTC-USD & ETH-USD</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            background-color: #000000; 
+            color: white;
+            overflow: hidden;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            background-color: #000000;
+            color: rgb(60, 255, 0);
+            position: sticky;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        #data-display {
+            font-family: 'Orbitron', sans-serif;
+            background-color: #000000; 
+            padding: 20px;
+            margin: 0;
+            border-bottom: 2px solid #333333; 
+            overflow: hidden;
+            text-align: center;
+        }
+
+        #graph-container-wrapper {
+            height: calc(100vh - 120px); 
+            overflow-y: auto;
+        }
+
+        #graph-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        #graph-container-wrapper::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #graph-container-wrapper::-webkit-scrollbar-track {
+            background: #000000;
+        }
+
+        #graph-container-wrapper::-webkit-scrollbar-thumb {
+            background: #ffffff;
+            border-radius: 5px;
+        }
+
+        #graph-container-wrapper::-webkit-scrollbar-thumb:hover {
+            background: #dddddd;
+        }
+
+        .graph {
+            width: 100%;
+            max-width: 1200px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+
+        .ticker-wrapper {
+            width: 100%;
+            overflow: hidden;
+            background-color: #000000; 
+            color: #ffffff;
+            position: relative;
+            padding: 10px;
+            border-top: 2px solid #333333;
+            white-space: nowrap;
+        }
+
+        .ticker {
+            display: inline-block;
+            white-space: nowrap;
+            animation: scroll 20s linear infinite;
+        }
+
+        .ticker-item {
+            display: inline-block;
+            padding: 0 20px;
+            border-right: 1px solid #333333; 
+        }
+
+        .ticker-item:last-child {
+            border-right: none;
+        }
+
+        @keyframes scroll {
+            0% {
+                transform: translateX(100%);
+            }
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <h1>BTC-USD & ETH-USD</h1>
+    <div id="data-display"></div>
+    <div id="graph-container-wrapper">
+        <div id="graph-container">
+            <div class="graph">
+                {{ graph_html|safe }}
+            </div>
+        </div>
+    </div>
+    <div class="ticker-wrapper">
+        <div class="ticker" id="ticker"></div>
+    </div>
+    <script>
+       document.addEventListener('DOMContentLoaded', () => {
+            const dataDisplay = document.getElementById('data-display');
+            const ticker = document.getElementById('ticker');
+            let currentIndex = 0;
+            
+            const fetchAndUpdateData = () => {
+                fetch('/crypto_data.json')  // Updated path assuming file is in the same directory
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Fetched Data:', data); 
+
+                        if (data.data && data.data.length > 0) {
+                            const crypto = data.data[currentIndex];
+
+                            dataDisplay.innerHTML = `
+                                <span style="margin-right: 15px;"><strong>${crypto.name}:</strong></span>
+                                <span style="margin-right: 15px;">Price: $${crypto.quote.USD.price.toFixed(2)}</span>
+                                <span style="margin-right: 15px;">24h Volume: $${crypto.quote.USD.volume_24h.toFixed(2)}</span>
+                                <span style="margin-right: 15px;">24h Volume Change: ${crypto.quote.USD.volume_change_24h.toFixed(4)}%</span>
+                                <span style="margin-right: 15px;">1h Change: ${crypto.quote.USD.percent_change_1h.toFixed(7)}%</span>
+                                <span style="margin-right: 15px;">24h Change: ${crypto.quote.USD.percent_change_24h.toFixed(8)}%</span>
+                                <span style="margin-right: 15px;">30d Change: ${crypto.quote.USD.percent_change_30d.toFixed(8)}%</span>
+                                <span style="margin-right: 15px;">Market Cap: $${crypto.quote.USD.market_cap.toFixed(2)}</span>
+                                <span style="margin-right: 15px;">Market Cap Dominance: ${crypto.quote.USD.market_cap_dominance.toFixed(4)}%</span>
+                                <span style="margin-right: 15px;">Fully Diluted Market Cap: $${crypto.quote.USD.fully_diluted_market_cap.toFixed(2)}</span>
+                            `;
+
+                            ticker.innerHTML = `
+                                <span class="ticker-item"><strong>${crypto.name}:</strong></span>
+                                <span class="ticker-item">Price: $${crypto.quote.USD.price.toFixed(2)}</span>
+                                <span class="ticker-item">24h Volume: $${crypto.quote.USD.volume_24h.toFixed(2)}</span>
+                                <span class="ticker-item">24h Volume Change: ${crypto.quote.USD.volume_change_24h.toFixed(4)}%</span>
+                                <span class="ticker-item">1h Change: ${crypto.quote.USD.percent_change_1h.toFixed(7)}%</span>
+                                <span class="ticker-item">24h Change: ${crypto.quote.USD.percent_change_24h.toFixed(8)}%</span>
+                                <span class="ticker-item">30d Change: ${crypto.quote.USD.percent_change_30d.toFixed(8)}%</span>
+                                <span class="ticker-item">Market Cap: $${crypto.quote.USD.market_cap.toFixed(2)}</span>
+                                <span class="ticker-item">Market Cap Dominance: ${crypto.quote.USD.market_cap_dominance.toFixed(4)}%</span>
+                                <span class="ticker-item">Fully Diluted Market Cap: $${crypto.quote.USD.fully_diluted_market_cap.toFixed(2)}</span>
+                            `;
+
+                            currentIndex = (currentIndex + 1) % data.data.length;
+                        } else {
+                            dataDisplay.innerHTML = '<p>No data available</p>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching data:', error);
+                        dataDisplay.innerHTML = '<p>Error fetching data</p>';
+                    });
+            };
+
+            fetchAndUpdateData();
+            setInterval(fetchAndUpdateData, 5000);
+
+        });
+    </script>
+</body>
+</html>
