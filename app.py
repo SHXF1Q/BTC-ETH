@@ -16,7 +16,7 @@ app = Flask(__name__)
 def background_fetch_and_save_data():
     while True:
         fetch_and_save_data()
-        time.sleep(5)
+        time.sleep(120)
 
 # Serve the JSON file
 @app.route('/crypto_data.json')
@@ -26,7 +26,7 @@ def serve_json():
 
 # Function to get top 3 cryptocurrencies
 def get_top_3_cryptos():
-   
+
     current_dir = os.path.dirname(os.path.abspath(__file__))
     file_path = os.path.join(current_dir, 'crypto_data.json')
     print(current_dir)
@@ -40,7 +40,7 @@ def get_top_3_cryptos():
         except (FileNotFoundError, json.JSONDecodeError) as e:
             logging.error(f"Attempt {attempt + 1}: Error reading JSON file: {e}")
             time.sleep(5)
-    
+
     return []
 
 # Function to get 
@@ -152,8 +152,8 @@ def index():
     with open("index.html", "r") as f:
         html_content = f.read()
     return html_content.replace("{{ graph_html|safe }}", graph_html)
-    
+
 
 if __name__ == '__main__':
     threading.Thread(target=background_fetch_and_save_data, daemon=True).start()
-    app.run(debug=True)
+    app.run(host = '0.0.0.0', port = 3000)
